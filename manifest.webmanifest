@@ -1,0 +1,19 @@
+{
+  "name": "私人电影回溯",
+  "short_name": "电影回溯",
+  "description": "整理已看电影、挖掘电影记忆和保存待看片单的私人电影回溯小程序。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#11100e",
+  "theme_color": "#11100e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
