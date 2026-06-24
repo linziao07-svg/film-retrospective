@@ -1,20 +1,21 @@
 :root {
   color-scheme: light;
-  --ink: #263047;
-  --muted: #6e7185;
-  --paper: #fff8ec;
-  --cream: #fff1cc;
-  --coral: #ff7e6e;
-  --teal: #38b8a6;
-  --sky: #7dc7ee;
-  --lilac: #b79be8;
-  --yellow: #ffd35a;
-  --green: #83c678;
-  --blue: #4867c9;
-  --line: rgba(38, 48, 71, 0.15);
-  --shadow: 0 18px 42px rgba(44, 34, 66, 0.18);
+  --ink: #252b3f;
+  --muted: #777b8d;
+  --paper: #fffaf0;
+  --cream: #fff3d2;
+  --coral: #ff8778;
+  --teal: #5cc9b7;
+  --sky: #a9d7f4;
+  --lilac: #c8b5ef;
+  --yellow: #ffd76a;
+  --green: #98d38c;
+  --blue: #5268b7;
+  --line: rgba(37, 43, 63, 0.12);
+  --stroke: rgba(37, 43, 63, 0.82);
+  --shadow: 0 18px 44px rgba(78, 62, 99, 0.14);
   font-family:
-    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
@@ -27,9 +28,11 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background:
-    radial-gradient(circle at 10% 8%, rgba(255, 211, 90, 0.46), transparent 28%),
-    radial-gradient(circle at 92% 4%, rgba(183, 155, 232, 0.42), transparent 26%),
-    linear-gradient(135deg, #ffe1d8 0%, #d5f0ee 48%, #fff1cc 100%);
+    radial-gradient(circle at 12% 8%, rgba(255, 215, 106, 0.32), transparent 27%),
+    radial-gradient(circle at 92% 4%, rgba(200, 181, 239, 0.28), transparent 26%),
+    linear-gradient(135deg, #ffe8dc 0%, #e0f2ee 50%, #fff4d8 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -45,7 +48,7 @@ button {
 }
 
 .app-shell {
-  width: min(1180px, calc(100vw - 24px));
+  width: min(1120px, calc(100vw - 32px));
   min-height: 100vh;
   margin: 0 auto;
   padding: 18px 0 98px;
@@ -55,20 +58,22 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: clamp(28px, 5vw, 48px);
+  font-size: clamp(30px, 4.2vw, 44px);
+  font-weight: 700;
   letter-spacing: 0;
   line-height: 1.04;
 }
 
 .app-header p {
   max-width: 560px;
-  margin: 5px 0 0;
+  margin: 7px 0 0;
   color: var(--muted);
+  font-size: 15px;
   line-height: 1.55;
 }
 
@@ -76,9 +81,8 @@ button {
   margin: 0 0 4px;
   color: var(--blue);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .microcopy {
@@ -97,7 +101,7 @@ button {
   gap: 8px;
   width: min(420px, calc(100vw - 28px));
   padding: 8px;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 24px;
   background: rgba(255, 248, 236, 0.9);
   box-shadow: var(--shadow);
@@ -109,7 +113,7 @@ button {
   display: grid;
   place-items: center;
   min-height: 56px;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 18px;
   color: var(--ink);
   background: transparent;
@@ -122,11 +126,11 @@ button {
 
 .bottom-nav button small {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .bottom-nav button.active {
-  border-color: var(--ink);
+  border-color: var(--stroke);
   background: var(--yellow);
   box-shadow: inset 0 -4px 0 rgba(38, 48, 71, 0.13);
 }
@@ -137,12 +141,12 @@ button {
 .icon-button {
   min-height: 40px;
   padding: 0 14px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 14px;
   color: var(--ink);
   background: var(--yellow);
-  font-weight: 800;
-  box-shadow: inset 0 -3px 0 rgba(38, 48, 71, 0.14);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 rgba(38, 48, 71, 0.1);
 }
 
 .ghost-button,
@@ -161,10 +165,10 @@ button {
   width: 100%;
   min-height: 44px;
   padding: 0 13px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 14px;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
   outline: none;
 }
 
@@ -192,12 +196,12 @@ textarea.field {
   background: #e9f8ff;
   color: #31506c;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .empty {
   padding: 22px;
-  border: 2px dashed rgba(38, 48, 71, 0.22);
+  border: 1px dashed rgba(38, 48, 71, 0.18);
   border-radius: 18px;
   color: var(--muted);
   background: rgba(255, 248, 236, 0.56);
@@ -235,17 +239,17 @@ textarea.field {
   display: grid;
   align-content: start;
   gap: 10px;
-  padding: 14px;
-  border: 3px solid var(--ink);
+  padding: 12px;
+  border: 2px solid var(--stroke);
   border-radius: 28px;
   background: rgba(255, 248, 236, 0.62);
   box-shadow: var(--shadow);
 }
 
 .topic-strip button {
-  min-height: 70px;
+  min-height: 58px;
   padding: 12px;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--stroke);
   border-radius: 18px;
   color: var(--ink);
   background: #fffdf4;
@@ -263,6 +267,7 @@ textarea.field {
 }
 
 .topic-strip span {
+  display: none;
   margin-top: 4px;
   color: rgba(38, 48, 71, 0.72);
   font-size: 12px;
@@ -273,13 +278,13 @@ textarea.field {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 650px;
+  min-height: 620px;
   overflow: hidden;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 34px;
   background:
-    linear-gradient(90deg, rgba(38, 48, 71, 0.08) 1px, transparent 1px) 0 0/54px 54px,
-    linear-gradient(0deg, rgba(38, 48, 71, 0.08) 1px, transparent 1px) 0 0/54px 54px,
+    linear-gradient(90deg, rgba(38, 48, 71, 0.045) 1px, transparent 1px) 0 0/64px 64px,
+    linear-gradient(0deg, rgba(38, 48, 71, 0.045) 1px, transparent 1px) 0 0/64px 64px,
     linear-gradient(135deg, var(--scene-a), var(--scene-b));
   box-shadow: var(--shadow);
 }
@@ -287,8 +292,8 @@ textarea.field {
 .desk-scene::before {
   content: "";
   position: absolute;
-  inset: 13% 6% 8%;
-  border: 3px solid rgba(38, 48, 71, 0.2);
+  inset: 14% 7% 9%;
+  border: 2px solid rgba(38, 48, 71, 0.14);
   border-radius: 38px;
   background: #ffd38c;
   transform: rotate(-2deg);
@@ -297,7 +302,7 @@ textarea.field {
 .desk-prop {
   position: absolute;
   z-index: 1;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
 }
 
 .prop-cup {
@@ -332,7 +337,7 @@ textarea.field {
 .swipe-card {
   position: relative;
   z-index: 2;
-  width: min(350px, calc(100vw - 62px));
+  width: min(330px, calc(100vw - 62px));
   touch-action: none;
   user-select: none;
   transition: transform 180ms ease;
@@ -361,7 +366,7 @@ textarea.field {
   position: relative;
   overflow: hidden;
   aspect-ratio: 2 / 3;
-  border: 4px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 22px;
   background: var(--paper);
   box-shadow: var(--shadow);
@@ -389,7 +394,7 @@ textarea.field {
     radial-gradient(circle at 72% 20%, var(--yellow), transparent 24%),
     linear-gradient(145deg, var(--teal), var(--lilac));
   color: var(--ink);
-  font-weight: 900;
+  font-weight: 700;
   text-align: center;
   line-height: 1.35;
 }
@@ -397,9 +402,9 @@ textarea.field {
 .swipe-meta {
   position: relative;
   width: calc(100% - 20px);
-  margin: -26px auto 0;
-  padding: 14px;
-  border: 3px solid var(--ink);
+  margin: -18px auto 0;
+  padding: 12px;
+  border: 1.5px solid var(--stroke);
   border-radius: 18px;
   background: rgba(255, 248, 236, 0.94);
 }
@@ -407,12 +412,13 @@ textarea.field {
 .swipe-meta span {
   color: var(--blue);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .swipe-meta h2 {
   margin: 3px 0;
-  font-size: 24px;
+  font-size: 21px;
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -422,15 +428,27 @@ textarea.field {
   font-size: 13px;
 }
 
+.info-chip {
+  margin-top: 10px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1.5px solid var(--stroke);
+  border-radius: 999px;
+  color: var(--ink);
+  background: #fff6be;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .swipe-signal {
   position: absolute;
   top: 28px;
   z-index: 3;
   padding: 10px 14px;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 14px;
   background: var(--paper);
-  font-weight: 900;
+  font-weight: 600;
   opacity: 0;
   transition: opacity 120ms ease;
 }
@@ -458,7 +476,7 @@ textarea.field {
   z-index: 2;
   width: min(780px, calc(100% - 24px));
   padding: 22px;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 28px;
   background: rgba(255, 248, 236, 0.94);
   box-shadow: var(--shadow);
@@ -467,7 +485,8 @@ textarea.field {
 .break-card h2,
 .state-card h2 {
   margin: 0 0 6px;
-  font-size: 28px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .mini-poster-grid {
@@ -480,9 +499,9 @@ textarea.field {
 .mini-poster {
   display: grid;
   gap: 8px;
-  min-height: 160px;
+  min-height: 148px;
   padding: 8px;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 18px;
   color: var(--ink);
   background: #fffdf4;
@@ -505,34 +524,34 @@ textarea.field {
 
 .mini-poster span {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .search-scene {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
   align-items: start;
 }
 
 .computer,
 .recommend-desk {
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 34px;
   background:
-    linear-gradient(90deg, rgba(38, 48, 71, 0.08) 1px, transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg, rgba(38, 48, 71, 0.045) 1px, transparent 1px) 0 0/56px 56px,
     linear-gradient(135deg, #8bd9cd, #ffe08a);
   box-shadow: var(--shadow);
 }
 
 .computer {
-  padding: 28px;
+  padding: 22px;
 }
 
 .monitor {
-  min-height: 590px;
-  padding: 18px;
-  border: 5px solid var(--ink);
+  min-height: 560px;
+  padding: 20px;
+  border: 2px solid var(--stroke);
   border-radius: 26px;
   background: #f8fbff;
 }
@@ -545,13 +564,14 @@ textarea.field {
 
 .search-results {
   display: grid;
-  gap: 18px;
-  margin-top: 18px;
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .result-section h3,
 .recommend-desk h2 {
   margin: 0 0 10px;
+  font-weight: 700;
 }
 
 .result-list {
@@ -562,11 +582,11 @@ textarea.field {
 .result-row,
 .recommend-card {
   display: grid;
-  grid-template-columns: 62px 1fr auto auto;
-  gap: 10px;
+  grid-template-columns: 58px 1fr auto auto;
+  gap: 12px;
   align-items: center;
   padding: 10px;
-  border: 2px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 248, 236, 0.62);
 }
@@ -583,7 +603,7 @@ textarea.field {
   overflow: hidden;
   width: 62px;
   aspect-ratio: 2 / 3;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--stroke);
   border-radius: 12px;
   background: var(--paper);
   padding: 0;
@@ -605,11 +625,21 @@ textarea.field {
 
 .recommend-actions button {
   min-height: 42px;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--stroke);
   border-radius: 14px;
   color: var(--ink);
   background: var(--paper);
-  font-weight: 800;
+  font-weight: 600;
+}
+
+.recommend-actions button.active {
+  background: var(--yellow);
+  box-shadow: inset 0 -2px 0 rgba(38, 48, 71, 0.1);
+}
+
+.refresh-button {
+  width: 100%;
+  margin: 0 0 12px;
 }
 
 .recommend-list {
@@ -621,14 +651,18 @@ textarea.field {
   grid-template-columns: 58px 1fr;
 }
 
+.recommend-card p:nth-of-type(2) {
+  display: none;
+}
+
 .archive-scene {
   position: relative;
   min-height: 680px;
   padding: 18px;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 34px;
   background:
-    linear-gradient(90deg, rgba(38, 48, 71, 0.08) 1px, transparent 1px) 0 0/60px 60px,
+    linear-gradient(90deg, rgba(38, 48, 71, 0.045) 1px, transparent 1px) 0 0/64px 64px,
     linear-gradient(135deg, #fac3d0, #d9c4ff 48%, #b7dff7);
   box-shadow: var(--shadow);
 }
@@ -637,7 +671,7 @@ textarea.field {
   content: "";
   position: absolute;
   inset: 84px 18px 18px;
-  border: 3px solid rgba(38, 48, 71, 0.18);
+  border: 1.5px solid rgba(38, 48, 71, 0.12);
   border-radius: 28px;
   background: rgba(255, 248, 236, 0.36);
 }
@@ -654,11 +688,11 @@ textarea.field {
 .wall-controls button {
   min-height: 40px;
   padding: 0 14px;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--stroke);
   border-radius: 999px;
   color: var(--ink);
   background: var(--paper);
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .wall-controls button.active {
@@ -676,7 +710,7 @@ textarea.field {
 
 .poster-wall.favorite-wall {
   padding: 18px;
-  border: 3px dashed rgba(38, 48, 71, 0.32);
+  border: 1.5px dashed rgba(38, 48, 71, 0.2);
   border-radius: 28px;
   background:
     radial-gradient(circle at 10% 10%, #fff1a8 0 3%, transparent 4%),
@@ -690,12 +724,12 @@ textarea.field {
   display: grid;
   gap: 8px;
   padding: 8px;
-  border: 3px solid var(--ink);
+  border: 1.5px solid var(--stroke);
   border-radius: 16px;
   color: var(--ink);
   background: var(--paper);
   transform: rotate(var(--tilt, -1deg));
-  box-shadow: 6px 8px 0 rgba(38, 48, 71, 0.13);
+  box-shadow: 5px 7px 0 rgba(38, 48, 71, 0.1);
 }
 
 .wall-poster:nth-child(3n) {
@@ -721,7 +755,7 @@ textarea.field {
 
 .wall-poster span {
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.3;
 }
 
@@ -743,7 +777,7 @@ textarea.field {
   width: min(920px, 100%);
   max-height: min(780px, calc(100vh - 36px));
   overflow: auto;
-  border: 3px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 30px;
   background: var(--paper);
   box-shadow: var(--shadow);
@@ -761,6 +795,14 @@ textarea.field {
   margin: 0;
 }
 
+.detail-overview {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 .detail-layout {
   display: grid;
   grid-template-columns: minmax(210px, 300px) 1fr;
@@ -771,7 +813,7 @@ textarea.field {
 .detail-poster {
   overflow: hidden;
   aspect-ratio: 2 / 3;
-  border: 4px solid var(--ink);
+  border: 2px solid var(--stroke);
   border-radius: 22px;
   background: var(--paper);
 }

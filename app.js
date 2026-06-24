@@ -86,6 +86,8 @@ let dragState = null;
 let searchQuery = "";
 let searchStatus = "";
 let recommendations = [];
+let recommendationScope = "小众优质";
+let recommendationPages = {};
 let apiStatus = "";
 
 function normalizeMovie(movie) {
@@ -109,6 +111,7 @@ function normalizeMovie(movie) {
     tags: Array.isArray(movie.tags) ? movie.tags : [],
     note: movie.note || "",
     exhibit: movie.exhibit || "",
+    overview: movie.overview || "",
     sourceLayer: movie.sourceLayer || movie.layer || "外部片库",
   };
 }
@@ -224,9 +227,9 @@ function render() {
 
 function renderHeader() {
   const subtitles = {
-    swipe: "把电影海报放在桌上，拖向左边或右边。",
-    search: "在电脑桌前检索电影，也让推荐走远一点。",
-    archive: "墙上贴着看过的电影，喜欢的那几张更亮。",
+    swipe: "拖动海报，整理记忆。",
+    search: "找电影，也找下一部。",
+    archive: "已看、喜欢、待看。",
   };
   return `
     <header class="app-header">
@@ -309,6 +312,7 @@ function renderSwipeCard() {
         <h2>${escapeHtml(movie.title)}</h2>
         <p>${escapeHtml(movieLine(movie))}</p>
         <div class="tag-row">${movie.tags.slice(0, 4).map(renderTag).join("")}</div>
+        <button class="info-chip" data-card-detail="${movie.id}" type="button">详情</button>
       </div>
     </article>
   `;
@@ -344,6 +348,7 @@ function renderBreakCard() {
 function renderSearch() {
   const localMatches = searchQuery ? state.movies.filter((movie) => searchable(movie).includes(searchQuery.toLowerCase())) : [];
   const externalResults = state.searchResults.filter((movie) => !state.movies.some((item) => item.id === movie.id));
+  const combinedResults = dedupeMovies([...localMatches, ...externalResults]);
   return `
     <section class="search-scene">
       <div class="computer">
@@ -352,27 +357,46 @@ function renderSearch() {
             <input class="field" data-search-input placeholder="搜索片名、导演、国家，也可以搜一个气质" value="${escapeHtml(searchQuery)}" />
             <button class="primary-button" data-action="search">搜索</button>
           </div>
-          <p class="microcopy">${searchStatus || "搜索会同时查你的资料库和外部电影资料。"}</p>
-          <div class="search-results">
-            ${renderSearchSection("本地资料", localMatches)}
-            ${renderSearchSection("外部电影", externalResults)}
-          </div>
+          <p class="microcopy">${searchStatus || "本地和外部一起查。"}</p>
+          ${renderSearchResults(combinedResults)}
         </div>
       </div>
       <aside class="recommend-desk">
         <h2>AI 推荐</h2>
-        <p>让推荐走出热门榜单：小众、老片、冷门国家、相似气质。</p>
+        <p>小众、老片、冷门国家、相似气质。</p>
         <div class="recommend-actions">
-          <button data-recommend="小众优质">小众优质</button>
-          <button data-recommend="经典老片">经典老片</button>
-          <button data-recommend="冷门国家">冷门国家</button>
-          <button data-recommend="相似气质">相似气质</button>
+          ${["小众优质", "经典老片", "冷门国家", "相似气质"].map((scope) => `
+            <button class="${recommendationScope === scope ? "active" : ""}" data-recommend="${scope}">${scope}</button>
+          `).join("")}
         </div>
+        <button class="ghost-button refresh-button" data-action="refresh-recommend">换一批</button>
         <div class="recommend-list">
-          ${(recommendations.length ? recommendations : buildLocalRecommendations("小众优质")).map(renderRecommendation).join("")}
+          ${(recommendations.length ? recommendations : buildLocalRecommendations(recommendationScope)).map(renderRecommendation).join("")}
         </div>
       </aside>
     </section>
+  `;
+}
+
+function renderSearchResults(movies) {
+  return `
+    <div class="search-results">
+      ${movies.length ? `
+        <div class="result-list">
+          ${movies.slice(0, 12).map((movie) => `
+            <article class="result-row">
+              <button data-open-movie="${movie.id}" class="thumb">${renderPoster(movie)}</button>
+              <div>
+                <strong>${escapeHtml(movie.title)}</strong>
+                <p>${escapeHtml(movieLine(movie) || "资料待补")}</p>
+              </div>
+              <button class="small-button" data-add-watch="${movie.id}">待看</button>
+              <button class="small-button" data-mark-seen="${movie.id}">已看</button>
+            </article>
+          `).join("")}
+        </div>
+      ` : `<p class="empty compact">暂无结果。</p>`}
+    </div>
   `;
 }
 
@@ -453,6 +477,7 @@ function renderDetailModal(id) {
           <div>
             <p class="eyebrow">电影资料</p>
             <h2>${escapeHtml(movie.title)}</h2>
+            ${movie.overview ? `<p class="detail-overview">${escapeHtml(movie.overview)}</p>` : ""}
           </div>
           <button class="icon-button" data-close-modal>关闭</button>
         </div>
@@ -547,21 +572,31 @@ function bindEvents() {
       if (button.dataset.action === "confirm-break") confirmBreak();
       if (button.dataset.action === "search") runSearch();
       if (button.dataset.action === "load-more") ensureCandidateSupply(true);
+      if (button.dataset.action === "refresh-recommend") runRecommendations(recommendationScope, true);
     });
   });
 
   document.querySelectorAll("[data-search-input]").forEach((input) => {
     input.addEventListener("input", () => {
       searchQuery = input.value;
-      render();
     });
     input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") runSearch();
+      if (event.key === "Enter" && !event.isComposing) runSearch();
     });
   });
 
   document.querySelectorAll("[data-recommend]").forEach((button) => {
-    button.addEventListener("click", () => runRecommendations(button.dataset.recommend));
+    button.addEventListener("click", () => runRecommendations(button.dataset.recommend, false));
+  });
+
+  document.querySelectorAll("[data-card-detail]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const id = button.dataset.cardDetail;
+      ensureMovieStored(id);
+      selectedMovieId = id;
+      render();
+    });
   });
 
   document.querySelectorAll("[data-archive-mode]").forEach((button) => {
@@ -617,6 +652,8 @@ function bindDragCard() {
       startX: event.clientX,
       startY: event.clientY,
       currentX: 0,
+      currentY: 0,
+      moved: false,
       pointerId: event.pointerId,
     };
     card.classList.add("dragging");
@@ -626,6 +663,8 @@ function bindDragCard() {
     const dx = event.clientX - dragState.startX;
     const dy = event.clientY - dragState.startY;
     dragState.currentX = dx;
+    dragState.currentY = dy;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) dragState.moved = true;
     const rotation = Math.max(-12, Math.min(12, dx / 12));
     card.style.transform = `translate(${dx}px, ${dy * 0.18}px) rotate(${rotation}deg)`;
     card.dataset.intent = dx > 36 ? "right" : dx < -36 ? "left" : "";
@@ -637,6 +676,22 @@ function bindDragCard() {
 function finishDrag(card) {
   if (!dragState) return;
   const dx = dragState.currentX;
+  const dy = dragState.currentY;
+  const movieId = card.dataset.movieId;
+  if (!dragState.moved) {
+    dragState = null;
+    ensureMovieStored(movieId);
+    selectedMovieId = movieId;
+    render();
+    return;
+  }
+  if (dy < -SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
+    dragState = null;
+    ensureMovieStored(movieId);
+    selectedMovieId = movieId;
+    render();
+    return;
+  }
   if (Math.abs(dx) > SWIPE_THRESHOLD) {
     const direction = dx > 0 ? "right" : "left";
     card.classList.add(direction === "right" ? "fly-right" : "fly-left");
@@ -691,7 +746,7 @@ function confirmBreak() {
 
 function currentCandidate() {
   const hidden = new Set(state.hiddenMovieIds);
-  return state.candidateCache.find((movie) => !hidden.has(movie.id));
+  return state.candidateCache.find((movie) => !hidden.has(movie.id) && topicMatches(movie, activeTopic));
 }
 
 function removeCandidate(id) {
@@ -699,12 +754,12 @@ function removeCandidate(id) {
 }
 
 async function ensureCandidateSupply(force = false) {
-  const available = state.candidateCache.filter((movie) => !state.hiddenMovieIds.includes(movie.id));
+  const available = state.candidateCache.filter((movie) => !state.hiddenMovieIds.includes(movie.id) && topicMatches(movie, activeTopic));
   if (!force && available.length > LOW_CANDIDATE_WATERMARK) return;
   apiStatus = force ? "正在从外部片库取一批新电影。" : apiStatus;
   try {
     const nextPage = (state.topicPages[activeTopic] || 0) + 1;
-    const response = await fetch(`/api/discover?topic=${encodeURIComponent(activeTopic)}&page=${nextPage}`);
+    const response = await fetch(`/api/discover?topic=${encodeURIComponent(topicApiId(activeTopic))}&page=${nextPage}`);
     if (!response.ok) throw new Error("discover failed");
     const payload = await response.json();
     state.topicPages[activeTopic] = payload.page || nextPage;
@@ -753,27 +808,34 @@ async function runSearch() {
   render();
 }
 
-async function runRecommendations(scope) {
-  recommendations = [];
+async function runRecommendations(scope, nextPage = false) {
+  recommendationScope = scope;
+  if (!nextPage) recommendationPages[scope] = 0;
   searchStatus = `正在准备「${scope}」推荐。`;
   render();
   try {
-    const response = await fetch(`/api/discover?topic=${encodeURIComponent(scope)}&page=1`);
+    const page = (recommendationPages[scope] || 0) + 1;
+    const response = await fetch(`/api/discover?topic=${encodeURIComponent(recommendationApiId(scope))}&page=${page}`);
     if (!response.ok) throw new Error("recommend failed");
     const payload = await response.json();
+    recommendationPages[scope] = payload.page || page;
+    const alreadyRecommended = new Set(nextPage ? recommendations.map((movie) => movie.id) : []);
     recommendations = (payload.movies || [])
       .map((movie) => normalizeMovie({ ...movie, reason: "" }))
       .filter((movie) => !state.hiddenMovieIds.includes(movie.id))
+      .filter((movie) => !alreadyRecommended.has(movie.id))
       .slice(0, 8)
       .map((movie) => ({ ...movie, reason: recommendationReason(movie, scope) }));
+    if (!recommendations.length) recommendations = buildLocalRecommendations(scope, recommendationPages[scope]);
   } catch {
-    recommendations = buildLocalRecommendations(scope);
+    recommendationPages[scope] = (recommendationPages[scope] || 0) + 1;
+    recommendations = buildLocalRecommendations(scope, recommendationPages[scope]);
   }
   searchStatus = `已生成「${scope}」方向推荐。`;
   render();
 }
 
-function buildLocalRecommendations(scope) {
+function buildLocalRecommendations(scope, page = 1) {
   const hidden = new Set(state.hiddenMovieIds);
   const scopeMap = {
     小众优质: ["小众高分", "相似气质"],
@@ -782,18 +844,41 @@ function buildLocalRecommendations(scope) {
     相似气质: ["相似气质", "生活流"],
   };
   const layers = scopeMap[scope] || [scope];
-  return fallbackCandidates
+  const matches = fallbackCandidates
     .filter((movie) => !hidden.has(movie.id))
     .filter((movie) => layers.some((layer) => movie.sourceLayer.includes(layer) || movie.tags.includes(layer)))
+  const start = ((page - 1) * 4) % Math.max(matches.length, 1);
+  return [...matches.slice(start), ...matches.slice(0, start)]
     .slice(0, 8)
     .map((movie) => ({ ...movie, reason: recommendationReason(movie, scope) }));
 }
 
+function topicMatches(movie, topic) {
+  if (topic === "mixed") return true;
+  const layer = movie.sourceLayer || "";
+  const tags = movie.tags || [];
+  const matchers = {
+    arthouse: ["小众高分", "作者电影", "小众", "相似气质"],
+    classic: ["经典老片", "经典", "老电影"],
+    global: ["冷门国家", "世界电影", "伊朗", "苏联", "匈牙利", "印度"],
+    life: ["生活流", "家庭", "关系", "日常", "饭桌"],
+  }[topic] || [];
+  return matchers.some((item) => layer.includes(item) || tags.includes(item));
+}
+
+function topicApiId(topic) {
+  return { mixed: "mixed", arthouse: "arthouse", classic: "classic", global: "global", life: "life" }[topic] || "mixed";
+}
+
+function recommendationApiId(scope) {
+  return { 小众优质: "arthouse", 经典老片: "classic", 冷门国家: "global", 相似气质: "life" }[scope] || "mixed";
+}
+
 function recommendationReason(movie, scope = "") {
-  if (movie.sourceLayer === "冷门国家" || scope === "冷门国家") return `它来自更少被默认榜单照亮的地区，适合拓宽你的电影墙。`;
-  if (movie.sourceLayer === "经典老片" || scope === "经典老片") return `它是老电影里仍然有生命力的一支，适合补一块电影史拼图。`;
-  if (movie.sourceLayer === "小众高分" || scope === "小众优质") return `它不是纯热门榜单逻辑，更偏作者表达和口碑积累。`;
-  return `它和你库里的情绪、风格或作者电影倾向有相近气质。`;
+  if (movie.sourceLayer === "冷门国家" || scope === "冷门国家") return "冷门地区";
+  if (movie.sourceLayer === "经典老片" || scope === "经典老片") return "经典老片";
+  if (movie.sourceLayer === "小众高分" || scope === "小众优质") return "小众高分";
+  return "相似气质";
 }
 
 function ensureMovieStored(id, source) {
