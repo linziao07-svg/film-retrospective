@@ -22,6 +22,7 @@ exports.handler = async (event) => {
         poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
         tags: ["外部搜索"],
         sourceLayer: "外部搜索",
+        overview: item.overview || "",
       }));
     return json({ source: "tmdb", movies });
   } catch (error) {

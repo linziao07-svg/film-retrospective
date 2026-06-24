@@ -84,7 +84,8 @@ function fromTmdb(item, topic) {
     (item.release_date || "").slice(0, 4),
     item.poster_path,
     topicTags(topic),
-    topic === "global" ? "冷门国家" : topic === "classic" ? "经典老片" : topic === "arthouse" ? "小众高分" : "外部片库"
+    topic === "global" ? "冷门国家" : topic === "classic" ? "经典老片" : topic === "arthouse" ? "小众高分" : "外部片库",
+    item.overview || ""
   );
 }
 
@@ -97,7 +98,7 @@ function topicTags(topic) {
   }[topic] || ["混合探索"];
 }
 
-function movie(id, title, country, director, year, posterPath, tags, sourceLayer) {
+function movie(id, title, country, director, year, posterPath, tags, sourceLayer, overview = "") {
   return {
     id: `tmdb-${id}`,
     tmdbId: String(id),
@@ -108,6 +109,7 @@ function movie(id, title, country, director, year, posterPath, tags, sourceLayer
     poster: posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : "",
     tags,
     sourceLayer,
+    overview,
   };
 }
 
