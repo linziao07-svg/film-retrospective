@@ -24,7 +24,8 @@ exports.handler = async (event) => {
         sourceLayer: "外部搜索",
         overview: item.overview || "",
       }));
-    return json({ source: "tmdb", movies });
+    const enriched = await enrichMovies(movies.slice(0, 12), token);
+    return json({ source: "tmdb", movies: enriched });
   } catch (error) {
     return json({ source: "fallback", error: "tmdb_unavailable", movies: [] });
   }
@@ -38,6 +39,29 @@ async function tmdb(url, token) {
   const response = await fetch(apiUrl, { headers });
   if (!response.ok) throw new Error(`tmdb ${response.status}`);
   return response.json();
+}
+
+async function enrichMovies(movies, token) {
+  const enriched = await Promise.all(
+    movies.map(async (movie) => {
+      try {
+        const url = `${TMDB_BASE}/movie/${movie.tmdbId}?language=zh-CN&append_to_response=credits`;
+        const detail = await tmdb(url, token);
+        const director = (detail.credits?.crew || []).find((person) => person.job === "Director")?.name || movie.director;
+        const country = (detail.production_countries || []).map((item) => item.name).filter(Boolean).slice(0, 2).join(" / ");
+        return {
+          ...movie,
+          country: country || movie.country,
+          director,
+          year: (detail.release_date || "").slice(0, 4) || movie.year,
+          overview: detail.overview || movie.overview,
+        };
+      } catch {
+        return movie;
+      }
+    })
+  );
+  return enriched;
 }
 
 function json(body) {

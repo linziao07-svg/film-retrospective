@@ -79,6 +79,7 @@ let view = "swipe";
 let archiveMode = "watched";
 let activeTopic = "mixed";
 let selectedMovieId = null;
+let previewMovieId = null;
 let selectedBreakIds = new Set();
 let breakStep = 0;
 let currentBatch = { left: [], right: [] };
@@ -216,6 +217,7 @@ function render() {
       ${renderView()}
       ${renderBottomNav()}
     </main>
+    ${previewMovieId ? renderPreviewModal(previewMovieId) : ""}
     ${selectedMovieId ? renderDetailModal(selectedMovieId) : ""}
   `;
   bindEvents();
@@ -523,6 +525,37 @@ function renderDetailModal(id) {
   `;
 }
 
+function renderPreviewModal(id) {
+  const movie = findAnyMovie(id);
+  if (!movie) return "";
+  return `
+    <div class="modal-backdrop" data-close-preview>
+      <section class="modal preview-modal" data-preview-modal>
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">外部资料</p>
+            <h2>${escapeHtml(movie.title)}</h2>
+            <p class="detail-overview">${escapeHtml(movie.overview || "暂时没有找到剧情简介。可以先凭海报、年份和标签判断，关闭后继续滑动。")}</p>
+          </div>
+          <button class="icon-button" data-close-preview>关闭</button>
+        </div>
+        <div class="preview-layout">
+          <div class="detail-poster">${renderPoster(movie)}</div>
+          <div class="preview-copy">
+            <dl class="fact-list">
+              <div><dt>年份</dt><dd>${escapeHtml(movie.year || "未知")}</dd></div>
+              <div><dt>国家 / 地区</dt><dd>${escapeHtml(movie.country || "资料待补")}</dd></div>
+              <div><dt>导演</dt><dd>${escapeHtml(movie.director || "资料待补")}</dd></div>
+              <div><dt>来源</dt><dd>${escapeHtml(movie.sourceLayer || "外部片库")}</dd></div>
+            </dl>
+            <div class="tag-row preview-tags">${movie.tags.slice(0, 6).map(renderTag).join("")}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
 function renderInput(name, label, value = "") {
   return `
     <label class="label">
@@ -547,6 +580,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       view = button.dataset.view;
       selectedMovieId = null;
+      previewMovieId = null;
       render();
     });
   });
@@ -593,8 +627,7 @@ function bindEvents() {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       const id = button.dataset.cardDetail;
-      ensureMovieStored(id);
-      selectedMovieId = id;
+      previewMovieId = id;
       render();
     });
   });
@@ -611,6 +644,7 @@ function bindEvents() {
       const id = button.dataset.openMovie;
       ensureMovieStored(id);
       selectedMovieId = id;
+      previewMovieId = null;
       render();
     });
   });
@@ -627,6 +661,14 @@ function bindEvents() {
     element.addEventListener("click", (event) => {
       if (event.target.closest("[data-modal]") && !event.target.matches("[data-close-modal]")) return;
       selectedMovieId = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-close-preview]").forEach((element) => {
+    element.addEventListener("click", (event) => {
+      if (event.target.closest("[data-preview-modal]") && !event.target.matches("[data-close-preview]")) return;
+      previewMovieId = null;
       render();
     });
   });
@@ -680,15 +722,13 @@ function finishDrag(card) {
   const movieId = card.dataset.movieId;
   if (!dragState.moved) {
     dragState = null;
-    ensureMovieStored(movieId);
-    selectedMovieId = movieId;
+    previewMovieId = movieId;
     render();
     return;
   }
   if (dy < -SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
     dragState = null;
-    ensureMovieStored(movieId);
-    selectedMovieId = movieId;
+    previewMovieId = movieId;
     render();
     return;
   }
@@ -901,14 +941,14 @@ function addToWatchCart(id, shouldRender = true) {
   if (shouldRender) render();
 }
 
-function markSeen(id) {
+function markSeen(id, shouldRender = true) {
   const movie = ensureMovieStored(id);
   if (!movie) return;
   movie.watched = true;
   state.watchCart = state.watchCart.filter((item) => item !== movie.id);
   hideMovie(movie.id, "right");
   saveState();
-  render();
+  if (shouldRender) render();
 }
 
 function markLiked(id) {

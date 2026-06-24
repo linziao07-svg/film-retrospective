@@ -24,7 +24,8 @@ exports.handler = async (event) => {
       .flatMap((layer) => layer.results || [])
       .filter((item) => item && item.id && item.poster_path)
       .map((item) => fromTmdb(item, topic));
-    return json({ source: "tmdb", page, movies: dedupe(movies).slice(0, 36) });
+    const enriched = await enrichMovies(dedupe(movies).slice(0, 24), token);
+    return json({ source: "tmdb", page, movies: enriched });
   } catch (error) {
     return json({ source: "fallback", page, error: "tmdb_unavailable", movies: fallbackMovies });
   }
@@ -87,6 +88,29 @@ function fromTmdb(item, topic) {
     topic === "global" ? "冷门国家" : topic === "classic" ? "经典老片" : topic === "arthouse" ? "小众高分" : "外部片库",
     item.overview || ""
   );
+}
+
+async function enrichMovies(movies, token) {
+  const enriched = await Promise.all(
+    movies.map(async (movie) => {
+      try {
+        const url = `${TMDB_BASE}/movie/${movie.tmdbId}?language=zh-CN&append_to_response=credits`;
+        const detail = await tmdb(url, token);
+        const director = (detail.credits?.crew || []).find((person) => person.job === "Director")?.name || movie.director;
+        const country = (detail.production_countries || []).map((item) => item.name).filter(Boolean).slice(0, 2).join(" / ");
+        return {
+          ...movie,
+          country: country || movie.country,
+          director,
+          year: (detail.release_date || "").slice(0, 4) || movie.year,
+          overview: detail.overview || movie.overview,
+        };
+      } catch {
+        return movie;
+      }
+    })
+  );
+  return enriched;
 }
 
 function topicTags(topic) {
