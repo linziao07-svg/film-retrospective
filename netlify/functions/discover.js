@@ -94,15 +94,16 @@ async function enrichMovies(movies, token) {
   const enriched = await Promise.all(
     movies.map(async (movie) => {
       try {
-        const url = `${TMDB_BASE}/movie/${movie.tmdbId}?language=zh-CN&append_to_response=credits`;
-        const detail = await tmdb(url, token);
+        const zhUrl = `${TMDB_BASE}/movie/${movie.tmdbId}?language=zh-CN&append_to_response=credits`;
+        const zh = await tmdb(zhUrl, token);
+        const detail = zh.overview ? zh : await tmdb(`${TMDB_BASE}/movie/${movie.tmdbId}?language=en-US&append_to_response=credits`, token);
         const director = (detail.credits?.crew || []).find((person) => person.job === "Director")?.name || movie.director;
         const country = (detail.production_countries || []).map((item) => item.name).filter(Boolean).slice(0, 2).join(" / ");
         return {
           ...movie,
           country: country || movie.country,
           director,
-          year: (detail.release_date || "").slice(0, 4) || movie.year,
+          year: (zh.release_date || detail.release_date || "").slice(0, 4) || movie.year,
           overview: detail.overview || movie.overview,
         };
       } catch {

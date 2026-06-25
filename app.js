@@ -90,6 +90,7 @@ let recommendations = [];
 let recommendationScope = "小众优质";
 let recommendationPages = {};
 let apiStatus = "";
+let previewLoadingId = "";
 
 function normalizeMovie(movie) {
   const year = movie.year || (movie.release_date ? String(movie.release_date).slice(0, 4) : "");
@@ -225,6 +226,7 @@ function render() {
     bindDragCard();
     ensureCandidateSupply();
   }
+  if (previewMovieId) ensurePreviewDetails(previewMovieId);
 }
 
 function renderHeader() {
@@ -386,14 +388,17 @@ function renderSearchResults(movies) {
       ${movies.length ? `
         <div class="result-list">
           ${movies.slice(0, 12).map((movie) => `
-            <article class="result-row">
-              <button data-open-movie="${movie.id}" class="thumb">${renderPoster(movie)}</button>
-              <div>
+            <article class="result-row" data-preview-movie="${movie.id}">
+              <button class="thumb" type="button">${renderPoster(movie)}</button>
+              <div class="result-copy">
                 <strong>${escapeHtml(movie.title)}</strong>
                 <p>${escapeHtml(movieLine(movie) || "资料待补")}</p>
+                ${movie.overview ? `<p class="result-overview">${escapeHtml(movie.overview)}</p>` : ""}
               </div>
-              <button class="small-button" data-add-watch="${movie.id}">待看</button>
-              <button class="small-button" data-mark-seen="${movie.id}">已看</button>
+              <div class="result-actions">
+                <button class="small-button" data-add-watch="${movie.id}">待看</button>
+                <button class="small-button" data-mark-seen="${movie.id}">已看</button>
+              </div>
             </article>
           `).join("")}
         </div>
@@ -409,8 +414,8 @@ function renderSearchSection(title, movies) {
       ${movies.length ? `
         <div class="result-list">
           ${movies.slice(0, 8).map((movie) => `
-            <article class="result-row">
-              <button data-open-movie="${movie.id}" class="thumb">${renderPoster(movie)}</button>
+            <article class="result-row" data-preview-movie="${movie.id}">
+              <button class="thumb" type="button">${renderPoster(movie)}</button>
               <div>
                 <strong>${escapeHtml(movie.title)}</strong>
                 <p>${escapeHtml(movieLine(movie) || "资料待补")}</p>
@@ -535,7 +540,7 @@ function renderPreviewModal(id) {
           <div>
             <p class="eyebrow">外部资料</p>
             <h2>${escapeHtml(movie.title)}</h2>
-            <p class="detail-overview">${escapeHtml(movie.overview || "暂时没有找到剧情简介。可以先凭海报、年份和标签判断，关闭后继续滑动。")}</p>
+            <p class="detail-overview">${escapeHtml(previewText(movie))}</p>
           </div>
           <button class="icon-button" data-close-preview>关闭</button>
         </div>
@@ -581,6 +586,7 @@ function bindEvents() {
       view = button.dataset.view;
       selectedMovieId = null;
       previewMovieId = null;
+      previewLoadingId = "";
       render();
     });
   });
@@ -632,6 +638,15 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll("[data-preview-movie]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      if (event.target.closest("[data-add-watch], [data-mark-seen]")) return;
+      previewMovieId = button.dataset.previewMovie || button.closest("[data-preview-movie]")?.dataset.previewMovie;
+      selectedMovieId = null;
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-archive-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       archiveMode = button.dataset.archiveMode;
@@ -645,6 +660,7 @@ function bindEvents() {
       ensureMovieStored(id);
       selectedMovieId = id;
       previewMovieId = null;
+      previewLoadingId = "";
       render();
     });
   });
@@ -1004,6 +1020,43 @@ function findAnyMovie(id) {
     state.searchResults.find((movie) => movie.id === id) ||
     fallbackCandidates.find((movie) => movie.id === id)
   );
+}
+
+async function ensurePreviewDetails(id) {
+  const movie = findAnyMovie(id);
+  if (!movie || !movie.tmdbId || movie.overview || previewLoadingId === id) return;
+  previewLoadingId = id;
+  try {
+    const response = await fetch(`/api/movie?id=${encodeURIComponent(movie.tmdbId)}`);
+    if (!response.ok) throw new Error("movie detail failed");
+    const payload = await response.json();
+    if (payload.movie) mergeMovieDetails(id, normalizeMovie(payload.movie));
+  } catch {
+    const cached = findAnyMovie(id);
+    if (cached && !cached.overview) cached.overview = "";
+  }
+  previewLoadingId = "";
+  if (previewMovieId === id) render();
+}
+
+function mergeMovieDetails(id, details) {
+  const apply = (movie) => {
+    if (!movie) return;
+    ["country", "director", "year", "poster", "overview"].forEach((key) => {
+      if (details[key]) movie[key] = details[key];
+    });
+    if (details.tags?.length && !movie.tags?.length) movie.tags = details.tags;
+  };
+  apply(state.movies.find((movie) => movie.id === id));
+  apply(state.candidateCache.find((movie) => movie.id === id));
+  apply(state.searchResults.find((movie) => movie.id === id));
+  saveState();
+}
+
+function previewText(movie) {
+  if (movie.overview) return movie.overview;
+  if (previewLoadingId === movie.id) return "正在补充剧情简介和幕后资料。";
+  return "暂时没有找到剧情简介。可以先凭海报、年份和标签判断，关闭后继续滑动。";
 }
 
 function dedupeMovies(movies) {
