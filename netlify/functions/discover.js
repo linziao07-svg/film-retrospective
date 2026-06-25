@@ -20,8 +20,7 @@ exports.handler = async (event) => {
 
   try {
     const layers = await Promise.all(buildLayerUrls(topic, page).map((url) => tmdb(url, token)));
-    const movies = layers
-      .flatMap((layer) => layer.results || [])
+    const movies = mixLayerResults(layers, topic)
       .filter((item) => item && item.id && item.poster_path)
       .map((item) => fromTmdb(item, topic));
     const enriched = await enrichMovies(dedupe(movies).slice(0, 24), token);
@@ -59,11 +58,17 @@ function buildLayerUrls(topic, page) {
   };
 
   return topicUrls[topic] || [
-    `${base}&sort_by=popularity.desc&vote_count.gte=1000`,
-    `${base}&sort_by=vote_average.desc&vote_count.gte=150&vote_count.lte=2500`,
-    `${base}&sort_by=vote_average.desc&primary_release_date.lte=1999-12-31&vote_count.gte=100`,
-    `${base}&sort_by=vote_average.desc&with_origin_country=${country}&vote_count.gte=30`,
+    `${base}&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=1200`,
+    `${base}&sort_by=vote_average.desc&primary_release_date.lte=2005-12-31&vote_count.gte=500`,
+    `${base}&sort_by=vote_average.desc&vote_count.gte=180&vote_count.lte=1800`,
+    `${base}&sort_by=vote_average.desc&with_origin_country=${country}&vote_count.gte=80`,
   ];
+}
+
+function mixLayerResults(layers, topic) {
+  if (topic !== "mixed") return layers.flatMap((layer) => layer.results || []);
+  const quotas = [12, 8, 3, 1];
+  return layers.flatMap((layer, index) => (layer.results || []).slice(0, quotas[index] || 4));
 }
 
 async function tmdb(url, token) {

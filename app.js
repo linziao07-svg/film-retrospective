@@ -1,7 +1,7 @@
 const STORAGE_KEY = "personal-film-retrospective-v2";
 const LEGACY_STORAGE_KEY = "personal-film-retrospective-v1";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
-const SWIPE_BATCH_SIZE = 15;
+const SWIPE_BATCH_SIZE = 10;
 const SWIPE_THRESHOLD = 92;
 const LOW_CANDIDATE_WATERMARK = 8;
 
@@ -1080,7 +1080,7 @@ function shuffleByTopic(movies) {
 }
 
 function layerWeight(layer = "") {
-  const weights = { 热门佳作: 1, 小众高分: 2, 经典老片: 3, 冷门国家: 4, 相似气质: 5 };
+  const weights = { 经典老片: 1, 热门佳作: 2, 相似气质: 3, 小众高分: 4, 冷门国家: 5 };
   return weights[layer] || 6;
 }
 
