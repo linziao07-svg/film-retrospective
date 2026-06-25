@@ -1016,8 +1016,11 @@ function deleteMovie(id) {
 function findAnyMovie(id) {
   return (
     state.movies.find((movie) => movie.id === id) ||
+    currentBatch.left.find((movie) => movie.id === id) ||
+    currentBatch.right.find((movie) => movie.id === id) ||
     state.candidateCache.find((movie) => movie.id === id) ||
     state.searchResults.find((movie) => movie.id === id) ||
+    recommendations.find((movie) => movie.id === id) ||
     fallbackCandidates.find((movie) => movie.id === id)
   );
 }
