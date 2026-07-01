@@ -393,7 +393,6 @@ function renderSearchResults(movies) {
               <div class="result-copy">
                 <strong>${escapeHtml(movie.title)}</strong>
                 <p>${escapeHtml(movieLine(movie) || "资料待补")}</p>
-                ${movie.overview ? `<p class="result-overview">${escapeHtml(movie.overview)}</p>` : ""}
               </div>
               <div class="result-actions">
                 <button class="small-button" data-add-watch="${movie.id}">待看</button>
